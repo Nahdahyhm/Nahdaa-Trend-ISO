@@ -1,0 +1,869 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+
+<style>
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .card h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: #4e73df;
+  }
+
+  .card p {
+    font-size: 22px;
+    font-weight: bold;
+    color: #2e2e2e;
+  }
+
+  .charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+  }
+
+  .chart-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .chart-box h3 {
+    font-size: 17px;
+    margin-bottom: 10px;
+    color: #333;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .chart-box canvas {
+    width: 100% !important;
+    height: 300px !important;
+  }
+
+  /* Growth & rekomendasi */
+  .growth-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+  }
+
+  .growth-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .growth-box h4 {
+    font-size: 17px;
+    margin-bottom: 12px;
+    color: #4e73df;
+    font-weight: bold;
+  }
+
+  .growth-item {
+    border: 1.5px solid #dcdcdc;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .growth-item:hover {
+    background: #f8f9fc;
+  }
+
+  .growth-item h6 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .growth-item span {
+    font-weight: bold;
+  }
+
+  .rekomendasi-box h4 {
+    color: #ff9800;
+  }
+
+  .rekomendasi-box p {
+    margin-bottom: 8px;
+    text-align: justify;
+  }
+
+  /* Modal Tren ISO */
+  .modal-title {
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .modal-body table {
+    font-size: 16px;
+    text-align: center;
+  }
+
+  .modal-body th {
+    background: #4e73df;
+    color: white;
+    font-weight: 600;
+  }
+
+  .modal-body td {
+    color: #333;
+    font-weight: 500;
+  }
+
+  /* Animasi halus modal */
+  .modal.fade .modal-dialog {
+    transform: translateY(-30px);
+    opacity: 0;
+    transition: all 0.4s ease;
+  }
+
+  .modal.show .modal-dialog {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* Buat donut tetap bulat */
+  .chart-box canvas {
+    width: auto !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    max-width: 350px;
+    margin: 0 auto;
+    display: block;
+  }
+
+  .card button {
+    background-color: #4e73df;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .card button:hover {
+    background-color: #2e59d9;
+  }
+
+/* === Modal Custom (Tambahan) === */
+.modal-content {
+  border-radius: 15px;
+  padding: 15px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.modal-body table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.modal-body th {
+  background: #4e73df;
+  color: white;
+  padding: 8px;
+  text-align: center;
+}
+
+.modal-body td {
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.kota-link {
+  color: #000 !important;
+  cursor: pointer;
+  text-decoration: none !important;
+}
+.kota-link:hover {
+  color: #0d6efd !important;
+  text-decoration: underline !important;
+}
+
+
+/* DETAIL : Tambahan styling popup custom */
+  .detail-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .detail-popup {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 700px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    animation: popupIn 0.3s ease;
+  }
+
+  @keyframes popupIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .detail-popup h5 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1c4966;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  .detail-popup table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  .detail-popup th, .detail-popup td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .detail-popup td:nth-child(2),
+  .detail-popup td:nth-child(3) {
+    text-align: left;
+  }
+
+  .detail-popup th {
+    background: #4e73df;
+    color: white;
+  }
+
+  .close-popup {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    margin-top: 15px;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+  }
+.status-active,
+.status-inactive {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  letter-spacing: 0.3px;
+  min-width: 70px;
+  text-align: center;
+}
+
+/* Warna khusus */
+.status-active {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.status-inactive {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.status-active:hover,
+.status-inactive:hover {
+  opacity: 0.9;
+  transform: scale(1.03);
+  transition: 0.2s ease;
+}
+
+  .kota-link {
+    cursor: pointer !important; 
+    display: inline-block !important;
+    width: 100%;
+  }
+
+  /* RANKING : Tambahan styling popup custom */
+  .ranking-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .ranking-popup {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 700px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    animation: popupIn 0.3s ease;
+  }
+
+  @keyframes popupIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .ranking-popup a {
+    position: relative;
+    z-index: 9999;
+  }
+
+  .ranking-popup h5 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1c4966;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+
+  .ranking-popup table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  .ranking-popup th, .ranking-popup td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+  }
+
+  .ranking-popup th {
+    background: #4e73df;
+    color: white;
+  }
+
+  .close-popup {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    margin-top: 15px;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+  }
+/* BUTTON (detail + ranking) */
+  .btn-ranking {
+    padding: 6px 14px;
+    font-size: 15px;
+    border: 1px solid #0d6efd;
+    background-color: transparent;
+    color: #0d6efd;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s ease;
+    margin-top: 8px;
+}
+
+.btn-ranking:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+.btn-detail {
+    padding: 6px 14px;
+    font-size: 15px;
+    border: 1px solid #0d6efd;
+    background-color: transparent;
+    color: #0d6efd;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s ease;
+    margin-top: 8px;
+}
+
+.btn-detail:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+/* -------------------------------
+   DARK MODE - PREMIUM UI
+-------------------------------- */
+
+/* Main content containers */
+[data-theme="dark"] .card,
+[data-theme="dark"] .chart-box,
+[data-theme="dark"] .growth-box,
+[data-theme="dark"] .detail-popup,
+[data-theme="dark"] .ranking-popup {
+  background: #191821 !important;   /* NAVY */
+  border: 1px solid #07182b;        /* navy border */
+  box-shadow: 0 0 15px rgba(30, 60, 120, 0.6); /* soft navy glow */
+  transition: 0.25s ease-in-out;
+}
+
+
+/* Slight hover pop + brighter glow */
+[data-theme="dark"] .card:hover,
+[data-theme="dark"] .growth-box:hover {
+  box-shadow: 0 0 18px rgba(90, 140, 255, 0.7);
+}
+
+/* Make ALL text readable in dark mode */
+[data-theme="dark"] .card *,
+[data-theme="dark"] .chart-box *,
+[data-theme="dark"] .growth-box *,
+[data-theme="dark"] .detail-popup *,
+[data-theme="dark"] .ranking-popup *,
+[data-theme="dark"] .modal-content * {
+  color: #f1f1f1 !important;
+}
+/* ==== KEEP GREEN GROWTH NUMBERS (override inline style) ==== */
+[data-theme="dark"] .growth-item span[style*="green"] {
+  color: rgb(46, 206, 46) !important;
+}
+/* ==== KEEP RED GROWTH NUMBERS (override inline style) ==== */
+[data-theme="dark"] .growth-item span[style*="red"] {
+  color: rgb(240, 53, 53) !important;
+}
+
+/* Headline numbers inside dashboard (lebih terang dari text biasa) */
+[data-theme="dark"] .card h3,
+[data-theme="dark"] .card .value,
+[data-theme="dark"] .growth-number {
+  color: #4da3ff !important; /* soft cyan highlight */
+  font-weight: 700;
+}
+
+/* Title icons stay glowing-blue */
+[data-theme="dark"] .icon {
+  color: #6da9ff !important;
+}
+
+/* Hover effect for growth box list */
+[data-theme="dark"] .growth-item:hover {
+  background: #2b2b2b;
+}
+
+/* Table header */
+[data-theme="dark"] .modal-body th,
+[data-theme="dark"] .detail-popup th,
+[data-theme="dark"] .ranking-popup th {
+  background: #3f5edf;
+  color: #fff !important;
+}
+
+/* Table cells */
+[data-theme="dark"] .modal-body td,
+[data-theme="dark"] .detail-popup td,
+[data-theme="dark"] .ranking-popup td {
+  border-color: #444;
+  color: #eaeaea !important;
+}
+
+/* Status badge colors */
+[data-theme="dark"] .status-active {
+  background: #19963f;
+  box-shadow: 0 0 6px rgba(25, 150, 63, 0.4);
+}
+
+[data-theme="dark"] .status-inactive {
+  background: #b12b2b;
+  box-shadow: 0 0 6px rgba(177, 43, 43, 0.4);
+}
+/* =====================================
+   FIX DARK MODE KHUSUS MODAL RANKING KOTA
+   ===================================== */
+[data-theme="dark"] .modal-content {
+    background: #191821 !important;
+    border: 1px solid #333 !important;
+}
+
+[data-theme="dark"] .modal-content table {
+    background: #191821 !important;
+    color: #eaeaea !important;
+    border-color: #444 !important;
+}
+
+[data-theme="dark"] .modal-content th {
+    background: #3f5edf !important;
+    color: #fff !important;
+}
+
+[data-theme="dark"] .modal-content td {
+    background: #191821 !important;
+    border-color: #444 !important;
+    color: #eaeaea !important;
+}
+
+[data-theme="dark"] .modal-content tr:hover {
+    background: #2a2a2a !important;
+}
+
+/* ==== DARK MODE CLOSE BUTTON ==== */
+[data-theme="dark"] .btn-close {
+  filter: invert(1) brightness(1.7);   /* ubah icon jadi putih */
+  opacity: 0.9;
+}
+
+[data-theme="dark"] .btn-close:hover {
+  filter: invert(1) brightness(2);
+  opacity: 1;
+}
+</style>
+
+
+<main>
+  <br>
+  <!-- Cards -->
+  <div class="cards">
+    <div class="card">
+      <h3><i class="fa-solid fa-building"></i> Total Perusahaan</h3>
+      <p>{{ total_perusahaan }}</p>
+      <button class="btn-detail" onclick="openPerusahaan()">Detail</button>
+    </div>
+    <div class="card">
+      <h3><i class="fa-solid fa-certificate"></i> Total Sertifikat</h3>
+      <p>{{ total_sertifikat }}</p>
+    </div>
+    <div class="card">
+      <h3><i class="fa-solid fa-check-circle"></i> Sertifikat Aktif</h3>
+      <p>{{ total_active }}</p>
+    </div>
+    <div class="card">
+      <h3><i class="fa-solid fa-chart-line"></i> Tren ISO</h3>
+      <p>{{ tren_teratas }}</p>
+      <!-- Tombol langsung buka modal -->
+      <!-- Tombol di card -->
+      <button class="btn-ranking" onclick="openTrend()">Ranking</button>
+    </div>
+  </div>
+      <!-- Charts -->
+      <div class="charts">
+        <div class="chart-box">
+          <h3>Jumlah Sertifikasi ISO</h3>
+          <canvas id="jenisChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Tren Sertifikasi</h3>
+          <canvas id="trendChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Distribusi Jenis ISO</h3>
+          <canvas id="donutChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Distribusi Bidang Usaha</h3>
+          <canvas id="usahaChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Growth & Rekomendasi -->
+      <div class="growth-section">
+        <div class="growth-box">
+          <h4>📈 Growth ISO Naik</h4>
+          {% for iso in trend_up %}
+          <div class="growth-item">
+            <h6>{{ iso.jenis_iso }}</h6>
+            <span style="color:green;">
+              <i class="fa-solid fa-arrow-up"></i> +{{ iso.percent }}%</span>
+          </div>
+          {% else %}
+          <p class="text-muted">Tidak ada data naik</p>
+          {% endfor %}
+        </div>
+
+        <div class="growth-box">
+          <h4>📉 Growth ISO Turun</h4>
+          {% for iso in trend_down %}
+          <div class="growth-item">
+            <h6>{{ iso.jenis_iso }}</h6>
+            <span style="color:red;">
+              <i class="fa-solid fa-arrow-down"></i> -{{ iso.percent }}%</span>
+          </div>
+          {% else %}
+          <p class="text-muted">Tidak ada data turun</p>
+          {% endfor %}
+        </div>
+
+        <div class="growth-box rekomendasi-box">
+          <h4>💡 Rekomendasi Bidang Usaha</h4>
+          <p><b>Bidang Usaha Potensial:</b> {{ rekomendasi_bidang_usaha.top.bidang_usaha }}</p>
+          <p><b>Bidang Usaha Terkecil:</b> {{ rekomendasi_bidang_usaha.bottom.bidang_usaha }} ({{
+            rekomendasi_bidang_usaha.bottom.total }})</p>
+          <p>{{ rekomendasi_bidang_usaha.marketing }}</p>
+        </div>
+      </div>
+
+      <!-- Modal Ranking Kota -->
+      <div class="modal fade" id="topKotaModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Ranking Kota</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table table-bordered text-center">
+                <thead class="table-primary">
+                  <tr>
+                    <th >Kota</th>
+                    <th>Total Sertifikat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in top_perusahaan_kota %}
+                  <tr>
+                    <td class="text-start">
+                      <a href="javascript:void(0)" class="kota-link text-primary" data-kota="{{ row.kota }}">
+                        {{ row.kota }}
+                      </a>
+                    </td>
+                    <td>{{ row.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Detail Perusahaan per Kota -->
+      <div class="modal fade" id="detailKotaModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">
+                Detail Perusahaan – <span id="modalKota"></span>
+              </h5>
+              <button type="button" id="closeDetailKota" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table table-bordered text-center">
+                <thead class="table-primary">
+                  <tr>
+                    <th>Nama Perusahaan</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="kotaClientList">
+                  <tr>
+                    <td colspan="2" class="text-muted">Pilih kota terlebih dahulu</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Modal Ranking ISO -->
+      <div class="modal fade" id="rankingIsoModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Detail Tren ISO</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table table-bordered text-center">
+                <thead class="table-primary">
+                  <tr>
+                    <th>Jenis ISO</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for t in tren_iso %}
+                  <tr>
+                    <td class="text-start">{{ t.jenis_iso }}</td>
+                    <td>{{ t.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Script buka/tutup popup -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+// Open modal ranking kota
+  function openPerusahaan() {
+    $("#topKotaModal").modal("show");
+  }
+
+  // Open modal trend ISO
+  function openTrend() {
+    $("#rankingIsoModal").modal("show");
+  }
+
+  new Chart(document.getElementById('jenisChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ jenis_labels| safe }},
+    datasets: [{ label: 'Jumlah', data: {{ jenis_data| safe }}, backgroundColor: '#4e73df' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ trend_labels| safe }},
+    datasets: [{ label: 'Jumlah', data: {{ trend_data| safe }}, backgroundColor: '#1cc88a' }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+
+  new Chart(document.getElementById('usahaChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ usaha_labels| safe }},
+    datasets: [{
+      label: 'Total',
+      data: {{ usaha_data| safe }},
+    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#20c997', '#6f42c1', '#fd7e14', '#17a2b8'],
+    borderRadius: 10
+      }]
+    },
+    options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      title: { display: false }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 12 } } },
+      y: { grid: { display: false }, ticks: { font: { size: 11.5, weight: '500' } } }
+    }
+  }
+  });
+
+  new Chart(document.getElementById('donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ jenis_labels| safe }},
+    datasets: [{
+      data: {{ jenis_data| safe }},
+    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'] 
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+</script>
+
+<script>
+  // Klik link kota → buka detail
+  $(document).on("click", ".kota-link", function() {
+    const kota = $(this).data("kota");
+    $("#topKotaModal").modal("hide");
+    $("#modalKota").text(kota);
+    $("#kotaClientList").html('<tr><td colspan="2">Loading...</td></tr>');
+    $("#detailKotaModal").modal("show");
+
+    $.getJSON(`/sertifikasi/get_client_by_kota?kota=${encodeURIComponent(kota)}`, function(res) {
+      if(res.status === "success" && res.data.length > 0){
+        let rows = "";
+        res.data.forEach(c => {
+          let status = c.status.toLowerCase();
+          let badgeClass = (status === "active" || status === "aktif")
+            ? "status-active"
+            : "status-inactive";
+          rows += `<tr>
+                    <td class="text-start">${c.nama_client}</td>
+                    <td><span class="${badgeClass}">${c.status}</span></td>
+                  </tr>`;
+        });
+        $("#kotaClientList").html(rows);
+      } else {
+        $("#kotaClientList").html('<tr><td colspan="2" class="text-muted">Tidak ada data</td></tr>');
+      }
+    }).fail(() => {
+      $("#kotaClientList").html('<tr><td colspan="2" class="text-danger">Gagal memuat data</td></tr>');
+    });
+  });
+
+  // Tutup modal detail → kembali ke modal ranking kota
+  $("#detailKotaModal").on("hidden.bs.modal", function() {
+    $("#topKotaModal").modal("show");
+  });
+</script>
+
+<!-- Pastikan Bootstrap JS sudah aktif -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}
